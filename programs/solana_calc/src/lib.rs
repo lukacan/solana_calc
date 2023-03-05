@@ -94,7 +94,7 @@ pub mod solana_calc {
             calculator.result = tmp_sum.unwrap();    
             Ok(())
         }else {
-            Err(error!(OpErrors::ABSError))
+            Err(error!(OpErrors::AbsError))
         }
         
     }
@@ -147,6 +147,6 @@ pub enum OpErrors {
     ZeroDivision,
     #[msg("Overflow occured")]
     Overflow,
-    #[msg("ABS error")]
-    ABSError,
+    #[msg("Abs error")]
+    AbsError,
 }

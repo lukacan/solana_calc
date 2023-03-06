@@ -7,9 +7,13 @@ pub mod solana_calc {
     use super::*;
 
     pub fn create(ctx: Context<Create>, init_message: String) -> Result<()> {
-        let calculator = &mut ctx.accounts.calculator;
-        calculator.greeting = init_message;
-        Ok({})
+        if init_message.chars().count() > 50{
+            Err(error!(OpErrors::MessageOverflow))
+        }else {
+            let calculator = &mut ctx.accounts.calculator;
+            calculator.greeting = init_message;
+            Ok(())            
+        }
     }
 
     pub fn add(ctx: Context<Operation>, num1: i64, num2: i64) -> Result<()> {
@@ -114,15 +118,12 @@ pub mod solana_calc {
         }
         
     }
-    
-
-
 }
 
 
 #[derive(Accounts)]
 pub struct Create<'info>{
-    #[account(init, payer=user, space=264)]
+    #[account(init, payer=user, space=Calculator::LEN)]
     pub calculator: Account<'info, Calculator>,
 
     #[account(mut)]
@@ -141,6 +142,23 @@ pub struct Calculator{
     greeting: String,
 }
 
+
+// https://book.anchor-lang.com/anchor_references/space.html
+const DISCRIMINATOR_LENGTH: usize = 8;
+const PUBLIC_KEY_LENGTH: usize = 32;
+const RESULT_LENGTH: usize = 8;
+const STRING_LENGTH_PREFIX: usize = 4;
+const MAX_GREETING_LENGTH: usize = 50 * 4;
+
+
+
+impl Calculator{
+    const LEN: usize = DISCRIMINATOR_LENGTH +
+    PUBLIC_KEY_LENGTH +
+    RESULT_LENGTH +
+    STRING_LENGTH_PREFIX + MAX_GREETING_LENGTH;
+}
+
 #[error_code]
 pub enum OpErrors {
     #[msg("Division by zero")]
@@ -149,4 +167,6 @@ pub enum OpErrors {
     Overflow,
     #[msg("Abs error")]
     AbsError,
+    #[msg("Init Message too long")]
+    MessageOverflow,
 }

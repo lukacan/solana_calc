@@ -16,16 +16,18 @@ describe("solana_calc", () => {
   const text = "Summer School Of Solana"
 
   it("Creating Calculator Instance", async () => {
-    await program.methods.create(text).accounts(
-      {
+      await program.methods.create(text)
+      .accounts({
           calculator: calculatorPair.publicKey,
           user: programProvider.wallet.publicKey,
           systemProgram: anchor.web3.programId,
-      }
-  ).signers([calculatorPair]).rpc()
-
-  const account = await program.account.calculator.fetch(calculatorPair.publicKey)
-  expect(account.greeting).to.eql(text)
+      })
+      .signers([calculatorPair])
+      .rpc()
+      const account = await program.account.calculator
+      .fetch(calculatorPair.publicKey)
+      expect(account.greeting).to.eql(text)
+      return
   });
 
   it('add',async () => {
@@ -36,6 +38,7 @@ describe("solana_calc", () => {
       .rpc()
       const account = await program.account.calculator.fetch(calculatorPair.publicKey)
       expect(account.result).to.eql(new anchor.BN(5))
+      return
   });
 
   it('sub',async () => {
@@ -46,6 +49,7 @@ describe("solana_calc", () => {
     .rpc()
     const account = await program.account.calculator.fetch(calculatorPair.publicKey)
     expect(account.result).to.eql(new anchor.BN(-1))
+    return
   });
 
   it('mul',async () => {
@@ -56,6 +60,7 @@ describe("solana_calc", () => {
     .rpc()
     const account = await program.account.calculator.fetch(calculatorPair.publicKey)
     expect(account.result).to.eql(new anchor.BN(6))
+    return
   });
 
 
@@ -67,6 +72,7 @@ describe("solana_calc", () => {
     .rpc()
     const account = await program.account.calculator.fetch(calculatorPair.publicKey)
     expect(account.result).to.eql(new anchor.BN(5))
+    return
   });
 
   it('mod',async () => {
@@ -77,6 +83,7 @@ describe("solana_calc", () => {
     .rpc()
     const account = await program.account.calculator.fetch(calculatorPair.publicKey)
     expect(account.result).to.eql(new anchor.BN(2))
+    return
   });
   it('pow',async () => {
     await program.methods.power(new anchor.BN(2), new anchor.BN(10))
@@ -86,6 +93,7 @@ describe("solana_calc", () => {
     .rpc()
     const account = await program.account.calculator.fetch(calculatorPair.publicKey)
     expect(account.result).to.eql(new anchor.BN(1024))
+    return
   });
 
 
@@ -97,6 +105,7 @@ describe("solana_calc", () => {
     .rpc()
     const account = await program.account.calculator.fetch(calculatorPair.publicKey)
     expect(account.result).to.eql(new anchor.BN(20))
+    return
   });
 
   it('rem',async () => {
@@ -107,6 +116,7 @@ describe("solana_calc", () => {
     .rpc()
     const account = await program.account.calculator.fetch(calculatorPair.publicKey)
     expect(account.result).to.eql(new anchor.BN(-1))
+    return
   });
 
   it('zero div',async () => {
@@ -120,8 +130,9 @@ describe("solana_calc", () => {
       assert.ok(_err instanceof AnchorError);
       assert.equal((_err as AnchorError)
       .error.errorCode.code, 'ZeroDivision');
+      return
     }
-
+    assert.fail('Should throw Zero div');
   });
 
   it('zero rem',async () => {
@@ -135,7 +146,9 @@ describe("solana_calc", () => {
       assert.ok(_err instanceof AnchorError);
       assert.equal((_err as AnchorError)
       .error.errorCode.code, 'ZeroDivision');
+      return
     }
+    assert.fail('Should throw Zero div');
   });
 
   it('zero mod',async () => {
@@ -149,8 +162,29 @@ describe("solana_calc", () => {
       assert.ok(_err instanceof AnchorError);
       assert.equal((_err as AnchorError)
       .error.errorCode.code, 'ZeroDivision');
+      return
     }
+    assert.fail('Should throw Zero div');
+  });
 
+  it("init message too long", async () => {
+    const calcPair = anchor.web3.Keypair.generate();
+    const initWith51Chars = 'x'.repeat(51);
+    try{
+      await program.methods.create(initWith51Chars)
+      .accounts({
+        calculator: calcPair.publicKey,
+        user: programProvider.wallet.publicKey,
+        systemProgram: anchor.web3.programId,
+      })
+      .signers([calcPair]).rpc()
+    } catch(_err){
+      assert.ok(_err instanceof AnchorError);
+      assert.equal((_err as AnchorError)
+      .error.errorCode.code,'MessageOverflow');
+      return
+    }
+    assert.fail('Should throw init message too long');
   });
 
 });
